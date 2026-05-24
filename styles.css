@@ -913,90 +913,32 @@ select:focus {
   }
 
   .score-sheet-wrap {
-    overflow-x: visible;
+    background: #fffaf0;
+    border: 1px solid rgba(110, 78, 25, 0.22);
+    box-shadow: 0 10px 22px rgba(33, 23, 10, 0.12);
+    overflow-x: hidden;
   }
 
   .score-sheet {
-    border-collapse: separate;
-    border-spacing: 0 12px;
+    border-collapse: collapse;
+    table-layout: fixed;
     min-width: 0;
-  }
-
-  .score-sheet thead {
-    display: none;
-  }
-
-  .score-sheet tbody,
-  .score-sheet tfoot,
-  .score-sheet tr,
-  .score-sheet th,
-  .score-sheet td {
-    display: block;
     width: 100%;
   }
 
-  .score-sheet tbody tr,
-  .score-sheet tfoot tr {
-    background: #fff3d8;
-    border: 1px solid rgba(157, 106, 36, 0.22);
-    border-radius: 8px;
-    box-shadow: 0 10px 24px rgba(33, 23, 10, 0.12);
-    overflow: hidden;
-  }
-
-  .score-sheet tbody th,
-  .score-sheet tfoot th {
-    align-items: center;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent),
-      linear-gradient(180deg, #073522, #031b11);
-    color: #fff2cf;
-    display: flex;
-    justify-content: space-between;
-    min-width: 0;
-    padding: 12px 14px;
-    position: static;
-  }
-
-  .score-sheet tbody td,
-  .score-sheet tfoot td {
-    align-items: center;
-    background: #fff7e8;
-    border-bottom: 1px solid rgba(157, 106, 36, 0.16);
-    display: flex;
-    justify-content: space-between;
-    padding: 12px 14px;
-    text-align: right;
-    white-space: normal;
-  }
-
-  .score-sheet tbody td::before,
-  .score-sheet tfoot td::before {
-    color: var(--muted);
-    content: attr(data-label);
+  .score-sheet th,
+  .score-sheet td {
+    border: 1px solid rgba(157, 106, 36, 0.18);
+    display: table-cell;
+    font-size: 0.76rem;
     font-weight: 800;
-    margin-right: 14px;
-    min-width: 0;
+    line-height: 1.2;
     overflow-wrap: anywhere;
-    text-align: left;
-  }
-
-  .score-sheet tfoot tr {
-    background: linear-gradient(180deg, #2c2010, #15100a);
-  }
-
-  .score-sheet tfoot th {
-    background: linear-gradient(180deg, #2c2010, #15100a);
-    border-bottom: 1px solid rgba(255, 226, 144, 0.18);
-    font-size: 1rem;
-  }
-
-  .score-sheet tfoot td {
-    border-bottom-color: rgba(255, 226, 144, 0.18);
-  }
-
-  .score-sheet tfoot td::before {
-    color: rgba(255, 250, 240, 0.82);
+    padding: 10px 5px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: normal;
+    width: auto;
   }
 
   .score-sheet th:first-child,
@@ -1004,6 +946,59 @@ select:focus {
     left: auto;
     min-width: 0;
     position: static;
+    text-align: left;
+    width: 26%;
+  }
+
+  .score-sheet thead th {
+    background: linear-gradient(180deg, #0b3b28, #031b11);
+    color: #fff6d7;
+    font-size: 0.66rem;
+    letter-spacing: 0;
+    padding: 9px 4px;
+    text-transform: none;
+  }
+
+  .score-sheet tbody th {
+    align-items: center;
+    background: #fff0c9;
+    color: #49351b;
+    display: table-cell;
+    font-size: 0.72rem;
+    text-align: left;
+  }
+
+  .round-label {
+    display: inline;
+    min-width: 0;
+  }
+
+  .edit-round-button {
+    flex: 0 0 24px;
+    font-size: 0.72rem;
+    height: 22px;
+    margin-left: 4px;
+    vertical-align: middle;
+    width: 22px;
+  }
+
+  .score-sheet tbody td {
+    background: #fffaf0;
+    color: #26170a;
+  }
+
+  .score-sheet tfoot th,
+  .score-sheet tfoot td {
+    border-color: rgba(255, 226, 144, 0.22);
+    font-size: 0.82rem;
+    font-weight: 900;
+    padding: 11px 5px;
+  }
+
+  .score-sheet tfoot th {
+    background: linear-gradient(180deg, #2c2010, #15100a);
+    color: #fff2cf;
+    text-align: left;
   }
 }
 
