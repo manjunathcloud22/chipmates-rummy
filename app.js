@@ -608,7 +608,10 @@ function renderStandings() {
                             }
                           </th>
                           ${state.players
-                            .map((player) => `<td>${Number(round[player.id]) || 0}</td>`)
+                            .map(
+                              (player) =>
+                                `<td data-label="${escapeHtml(player.name)}">${Number(round[player.id]) || 0}</td>`,
+                            )
                             .join("")}
                         </tr>
                       `,
@@ -617,7 +620,9 @@ function renderStandings() {
                 : `
                   <tr>
                     <th scope="row">Round 1</th>
-                    ${state.players.map(() => `<td class="empty-score">-</td>`).join("")}
+                    ${state.players
+                      .map((player) => `<td class="empty-score" data-label="${escapeHtml(player.name)}">-</td>`)
+                      .join("")}
                   </tr>
                 `
             }
@@ -628,7 +633,7 @@ function renderStandings() {
               ${state.players
                 .map((player) => {
                   const total = playerTotals.find((item) => item.id === player.id);
-                  return `<td class="${scoreToneClass(total?.score || 0)}">${total?.score || 0}</td>`;
+                  return `<td class="${scoreToneClass(total?.score || 0)}" data-label="${escapeHtml(player.name)}">${total?.score || 0}</td>`;
                 })
                 .join("")}
             </tr>
