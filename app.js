@@ -1,4 +1,7 @@
 const STORAGE_KEY = "rummy-scorekeeper-state";
+const SUPABASE_URL = "https://enurxbewxprrzwilvsgf.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVudXJ4YmV3eHBycnp3aWx2c2dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1ODMzOTAsImV4cCI6MjA5NTE1OTM5MH0.8btKD7z106kPIMNMM6rCYt4-hTRkAAAdeVqNGT77yPw";
 
 const initialState = {
   pointLimit: 251,
@@ -10,8 +13,7 @@ const initialState = {
 };
 
 let state = loadState();
-let roomId = new URLSearchParams(window.location.search).get("room");
-let roomPoll = null;
+let gameId = new URLSearchParams(window.location.search).get("gameId");
 let editingRoundIndex = null;
 let moneyHistoryVisible = false;
 
@@ -323,10 +325,11 @@ function startNewGame() {
   const todaysGameHistory = state.moneyEntries;
   state = { ...initialState, players: [], rounds: [], moneyEntries: todaysGameHistory };
   moneyHistoryVisible = false;
-  roomId = null;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-  window.history.replaceState({}, "", `${window.location.pathname}?game=${encoded}`);
+  saveState();
+  if (!gameId) {
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+    window.history.replaceState({}, "", `${window.location.pathname}?game=${encoded}`);
+  }
   render();
 }
 
@@ -348,87 +351,108 @@ async function shareGame() {
 }
 
 async function buildShareUrl() {
-  const roomUrl = await ensureRoom();
-  if (roomUrl) {
-    return roomUrl;
+  const cloudUrl = await ensureCloudGame();
+  if (cloudUrl) {
+    return cloudUrl;
   }
 
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
   return `${window.location.origin}${window.location.pathname}?game=${encoded}`;
 }
 
-async function ensureRoom() {
+async function ensureCloudGame() {
   try {
-    if (roomId) {
-      await fetch(`/api/games/${roomId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(state),
-      });
-      return `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+    if (gameId) {
+      await saveCloudGame();
+      return `${window.location.origin}${window.location.pathname}?gameId=${gameId}`;
     }
 
-    const response = await fetch("/api/games", {
+    const response = await supabaseFetch("/games", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(state),
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ state_json: state }),
     });
     if (!response.ok) {
+      els.tableStatus.textContent = "Could not create share link. Check Supabase setup.";
       return null;
     }
 
     const data = await response.json();
-    roomId = data.id;
-    window.history.replaceState({}, "", `${window.location.pathname}?room=${roomId}`);
-    startRoomPolling();
-    return `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+    gameId = data[0]?.id;
+    if (!gameId) {
+      return null;
+    }
+
+    window.history.replaceState({}, "", `${window.location.pathname}?gameId=${gameId}`);
+    return `${window.location.origin}${window.location.pathname}?gameId=${gameId}`;
   } catch {
+    els.tableStatus.textContent = "Could not create share link. Check internet connection.";
     return null;
   }
 }
 
 async function syncRoom() {
-  if (!roomId) {
+  await saveCloudGame();
+}
+
+async function saveCloudGame() {
+  if (!gameId) {
     return;
   }
 
   try {
-    await fetch(`/api/games/${roomId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(state),
+    const response = await supabaseFetch(`/games?id=eq.${encodeURIComponent(gameId)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ state_json: state, updated_at: new Date().toISOString() }),
     });
+    if (!response.ok) {
+      els.tableStatus.textContent = "Could not save latest scores to cloud.";
+    }
   } catch {
-    // Static hosting still works through URL-encoded share links.
+    els.tableStatus.textContent = "Offline: latest changes are saved on this device only.";
   }
 }
 
 async function loadRoomState() {
-  if (!roomId) {
+  if (!gameId) {
     return;
   }
 
   try {
-    const response = await fetch(`/api/games/${roomId}`);
+    const response = await supabaseFetch(`/games?id=eq.${encodeURIComponent(gameId)}&select=state_json`);
     if (!response.ok) {
+      els.tableStatus.textContent = "Could not load shared game.";
       return;
     }
 
     const data = await response.json();
-    state = normalizeState(data);
+    if (!data[0]?.state_json) {
+      els.tableStatus.textContent = "Shared game not found.";
+      return;
+    }
+
+    state = normalizeState(data[0].state_json);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     render();
   } catch {
-    // If the room API is unavailable, keep the locally loaded state.
+    els.tableStatus.textContent = "Could not refresh shared game.";
   }
 }
 
 function startRoomPolling() {
-  if (!roomId || roomPoll) {
-    return;
-  }
+  // Refreshing the shared link loads the latest Supabase state.
+}
 
-  roomPoll = window.setInterval(loadRoomState, 3000);
+function supabaseFetch(path, options = {}) {
+  return fetch(`${SUPABASE_URL}/rest/v1${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
 }
 
 function renderPlayers() {
