@@ -194,26 +194,32 @@ button:hover {
 
 .table-actions {
   align-items: center;
-  background: rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(255, 226, 144, 0.18);
-  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(255, 226, 144, 0.22);
+  border-radius: 999px;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   justify-content: flex-end;
   max-width: 100%;
-  padding: 6px;
+  padding: 8px;
 }
 
 .table-actions .primary-action,
 .table-actions .secondary-action,
 .table-actions .end-action {
   align-items: center;
+  border-radius: 999px;
   display: inline-flex;
   flex: 0 0 auto;
-  height: 42px;
+  font-size: 0.82rem;
+  font-weight: 900;
+  height: 40px;
   justify-content: center;
-  min-height: 42px;
-  padding: 0 16px;
+  letter-spacing: 0;
+  min-height: 40px;
+  min-width: 108px;
+  padding: 0 15px;
+  white-space: nowrap;
   width: auto;
 }
 
@@ -222,14 +228,22 @@ button:hover {
 }
 
 .table-actions .primary-action {
-  box-shadow: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent),
+    linear-gradient(135deg, #b5122b, #5f0c16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 10px 20px rgba(113, 16, 29, 0.26);
 }
 
 .table-actions .share-action {
-  border-radius: 999px;
-  font-size: 0.82rem;
-  min-width: 88px;
-  padding: 0 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent),
+    linear-gradient(180deg, #ffd76a, #b87916);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 10px 20px rgba(215, 173, 71, 0.22);
+  color: #2b1605;
 }
 
 .money-action {
@@ -244,14 +258,14 @@ button:hover {
     0 10px 20px rgba(0, 0, 0, 0.18);
   color: #2a1608;
   display: inline-flex;
-  flex: 0 0 42px;
+  flex: 0 0 40px;
   font-size: 1.05rem;
   font-weight: 900;
-  height: 42px;
+  height: 40px;
   justify-content: center;
   line-height: 1;
   padding: 0;
-  width: 42px;
+  width: 40px;
 }
 
 .money-action:hover {
@@ -265,11 +279,10 @@ button:hover {
     linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent),
     linear-gradient(135deg, #451018, #1d070a);
   border: 1px solid rgba(255, 226, 144, 0.28);
-  border-radius: 8px;
   color: #fff2cf;
-  font-size: 0.82rem;
-  font-weight: 900;
-  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 10px 20px rgba(69, 16, 24, 0.24);
 }
 
 .end-action:hover {
@@ -472,13 +485,6 @@ select:focus {
 
 .secondary-action {
   flex: 1;
-}
-
-.table-actions .share-action {
-  flex: 0 0 auto;
-  font-size: 0.8rem;
-  min-height: 34px;
-  padding: 0 10px;
 }
 
 .actions-row {
@@ -1091,15 +1097,17 @@ select:focus {
 
   .table-actions {
     align-items: stretch;
-    border-radius: 8px;
+    border-radius: 18px;
     display: grid;
-    grid-template-columns: 1fr 42px;
+    gap: 9px;
+    grid-template-columns: 1fr 40px;
     justify-content: stretch;
   }
 
   .table-actions .share-action,
   .table-actions .primary-action,
   .table-actions .end-action {
+    min-width: 0;
     width: 100%;
   }
 
