@@ -12,10 +12,16 @@ const initialState = {
   ended: false,
 };
 
+const searchParams = new URLSearchParams(window.location.search);
+let gameId = searchParams.get("g") || searchParams.get("gameId");
 let state = loadState();
-let gameId = new URLSearchParams(window.location.search).get("gameId");
 let editingRoundIndex = null;
 let moneyHistoryVisible = false;
+let isLoadingRoom = Boolean(gameId);
+let roomLoadFailed = false;
+let isCloudSaving = false;
+let lastLocalChangeAt = 0;
+let roomPollTimer = null;
 
 const els = {
   appShell: document.querySelector("#appShell"),
@@ -56,6 +62,10 @@ const els = {
 };
 
 function loadState() {
+  if (gameId) {
+    return { ...initialState };
+  }
+
   const sharedState = readSharedState();
   if (sharedState) {
     return sharedState;
@@ -108,6 +118,7 @@ function normalizeState(value) {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  lastLocalChangeAt = Date.now();
   syncRoom();
 }
 
@@ -230,7 +241,7 @@ function saveMoney() {
   const entry = {};
   state.players.forEach((player) => {
     const input = document.querySelector(`[data-money-input="${player.id}"]`);
-    entry[player.id] = Number(input.value) || 0;
+    entry[player.id] = readSignedAmount(input?.value);
   });
 
   const hasMoney = Object.values(entry).some((value) => value !== 0);
@@ -326,15 +337,14 @@ function startNewGame() {
   state = { ...initialState, players: [], rounds: [], moneyEntries: todaysGameHistory };
   moneyHistoryVisible = false;
   saveState();
-  if (!gameId) {
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-    window.history.replaceState({}, "", `${window.location.pathname}?game=${encoded}`);
-  }
   render();
 }
 
 async function shareGame() {
   const url = await buildShareUrl();
+  if (!url) {
+    return;
+  }
 
   try {
     if (navigator.share) {
@@ -356,15 +366,14 @@ async function buildShareUrl() {
     return cloudUrl;
   }
 
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-  return `${window.location.origin}${window.location.pathname}?game=${encoded}`;
+  return null;
 }
 
 async function ensureCloudGame() {
   try {
     if (gameId) {
       await saveCloudGame();
-      return `${window.location.origin}${window.location.pathname}?gameId=${gameId}`;
+      return roomUrl();
     }
 
     const response = await supabaseFetch("/games", {
@@ -383,8 +392,9 @@ async function ensureCloudGame() {
       return null;
     }
 
-    window.history.replaceState({}, "", `${window.location.pathname}?gameId=${gameId}`);
-    return `${window.location.origin}${window.location.pathname}?gameId=${gameId}`;
+    window.history.replaceState({}, "", `${window.location.pathname}?g=${gameId}`);
+    startRoomPolling();
+    return roomUrl();
   } catch {
     els.tableStatus.textContent = "Could not create share link. Check internet connection.";
     return null;
@@ -392,6 +402,9 @@ async function ensureCloudGame() {
 }
 
 async function syncRoom() {
+  if (isLoadingRoom) {
+    return;
+  }
   await saveCloudGame();
 }
 
@@ -401,6 +414,7 @@ async function saveCloudGame() {
   }
 
   try {
+    isCloudSaving = true;
     const response = await supabaseFetch(`/games?id=eq.${encodeURIComponent(gameId)}`, {
       method: "PATCH",
       body: JSON.stringify({ state_json: state, updated_at: new Date().toISOString() }),
@@ -410,11 +424,16 @@ async function saveCloudGame() {
     }
   } catch {
     els.tableStatus.textContent = "Offline: latest changes are saved on this device only.";
+  } finally {
+    isCloudSaving = false;
   }
 }
 
-async function loadRoomState() {
+async function loadRoomState({ silent = false } = {}) {
   if (!gameId) {
+    return;
+  }
+  if (isCloudSaving || Date.now() - lastLocalChangeAt < 1500) {
     return;
   }
 
@@ -422,25 +441,51 @@ async function loadRoomState() {
     const response = await supabaseFetch(`/games?id=eq.${encodeURIComponent(gameId)}&select=state_json`);
     if (!response.ok) {
       els.tableStatus.textContent = "Could not load shared game.";
+      roomLoadFailed = true;
       return;
     }
 
     const data = await response.json();
     if (!data[0]?.state_json) {
       els.tableStatus.textContent = "Shared game not found.";
+      roomLoadFailed = true;
       return;
     }
 
-    state = normalizeState(data[0].state_json);
+    const nextState = normalizeState(data[0].state_json);
+    const changed = JSON.stringify(nextState) !== JSON.stringify(state);
+    state = nextState;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    render();
+    window.history.replaceState({}, "", `${window.location.pathname}?g=${gameId}`);
+    isLoadingRoom = false;
+    roomLoadFailed = false;
+    if (changed || !silent) {
+      render();
+    }
   } catch {
-    els.tableStatus.textContent = "Could not refresh shared game.";
+    roomLoadFailed = true;
+    if (!silent) {
+      els.tableStatus.textContent = "Could not refresh shared game.";
+    }
+  } finally {
+    isLoadingRoom = false;
+    render();
   }
 }
 
 function startRoomPolling() {
-  // Refreshing the shared link loads the latest Supabase state.
+  if (!gameId || roomPollTimer) {
+    return;
+  }
+  roomPollTimer = window.setInterval(() => {
+    if (!document.hidden && !isDialogOpen()) {
+      loadRoomState({ silent: true });
+    }
+  }, 5000);
+}
+
+function roomUrl() {
+  return `${window.location.origin}${window.location.pathname}?g=${gameId}`;
 }
 
 function supabaseFetch(path, options = {}) {
@@ -494,7 +539,7 @@ function renderMoneyForm() {
       (player) => `
         <div class="round-input-row">
           <label for="money-${player.id}">${escapeHtml(player.name)}</label>
-          <input id="money-${player.id}" inputmode="decimal" type="number" step="1" data-money-input="${player.id}" value="0" />
+          <input id="money-${player.id}" type="text" data-money-input="${player.id}" value="0" placeholder="0 or -50" autocomplete="off" />
         </div>
       `,
     )
@@ -502,6 +547,13 @@ function renderMoneyForm() {
 }
 
 function renderStandings() {
+  if (roomLoadFailed && !state.started) {
+    els.tableMeta.textContent = "";
+    els.winnerBadge.classList.add("hidden");
+    els.standings.innerHTML = `<p class="empty-state">Shared game could not load. Check the link or Supabase permissions.</p>`;
+    return;
+  }
+
   const standings = orderedStandings();
   const activePlayers = standings.filter((player) => !player.out);
   const playerTotals = totals();
@@ -722,11 +774,23 @@ function readPointLimit() {
   return Math.max(1, Number(els.pointLimit.value) || 251);
 }
 
+function readSignedAmount(value) {
+  const cleaned = String(value || "")
+    .replace(/[,$\s]/g, "")
+    .replace(/[−–—]/g, "-");
+  return Number(cleaned) || 0;
+}
+
+function isDialogOpen() {
+  return !els.pointsDialog.classList.contains("hidden") || !els.moneyDialog.classList.contains("hidden");
+}
+
 function render() {
-  els.appShell.classList.toggle("game-active", state.started);
-  els.scoreboardPanel.classList.toggle("hidden", state.started);
-  els.tablePanel.classList.toggle("hidden", !state.started);
-  els.tableActions.classList.toggle("hidden", !state.started);
+  const showGame = state.started || isLoadingRoom || roomLoadFailed;
+  els.appShell.classList.toggle("game-active", showGame);
+  els.scoreboardPanel.classList.toggle("hidden", showGame);
+  els.tablePanel.classList.toggle("hidden", !showGame);
+  els.tableActions.classList.toggle("hidden", !state.started || isLoadingRoom);
   els.startGame.classList.toggle("hidden", state.started);
   els.addPoints.classList.toggle("hidden", state.ended);
   els.addMoney.classList.toggle("hidden", state.ended);
@@ -735,6 +799,9 @@ function render() {
   renderPlayers();
   renderStandings();
   renderHistory();
+  if (isLoadingRoom) {
+    els.tableStatus.textContent = "Loading shared game...";
+  }
 }
 
 function escapeHtml(value) {
