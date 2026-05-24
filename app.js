@@ -334,10 +334,23 @@ function startNewGame() {
   }
 
   const todaysGameHistory = state.moneyEntries;
+  detachFromSharedRoom();
   state = { ...initialState, players: [], rounds: [], moneyEntries: todaysGameHistory };
   moneyHistoryVisible = false;
-  saveState();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   render();
+}
+
+function detachFromSharedRoom() {
+  gameId = null;
+  isLoadingRoom = false;
+  roomLoadFailed = false;
+  isCloudSaving = false;
+  if (roomPollTimer) {
+    window.clearInterval(roomPollTimer);
+    roomPollTimer = null;
+  }
+  window.history.replaceState({}, "", window.location.pathname);
 }
 
 async function shareGame() {
@@ -459,6 +472,9 @@ async function loadRoomState({ silent = false } = {}) {
     window.history.replaceState({}, "", `${window.location.pathname}?g=${gameId}`);
     isLoadingRoom = false;
     roomLoadFailed = false;
+    if (!silent) {
+      els.tableStatus.textContent = "";
+    }
     if (changed || !silent) {
       render();
     }
