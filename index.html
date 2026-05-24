@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chipmates Rummy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" id="appShell">
+      <section class="scoreboard-panel" id="scoreboardPanel">
+        <div class="topbar">
+          <div class="brand-mark" aria-hidden="true">CM</div>
+          <div class="brand-copy">
+            <p class="eyebrow">Rummy table</p>
+            <h1><span>Chipmates</span> Rummy</h1>
+          </div>
+        </div>
+
+        <section class="setup" id="setupPanel">
+          <div class="field-row">
+            <label for="pointLimit">Point limit</label>
+            <input id="pointLimit" type="number" inputmode="numeric" min="1" step="1" value="251" />
+          </div>
+
+          <div class="player-entry">
+            <label for="playerName">Add players</label>
+            <div class="entry-controls">
+              <input id="playerName" type="text" placeholder="Add player name" autocomplete="off" />
+              <button id="addPlayer" type="button">Add</button>
+            </div>
+            <div class="player-chips" id="playerChips"></div>
+          </div>
+
+          <button class="primary-action" id="startGame" type="button">Start the Game</button>
+          <p class="share-status" id="setupStatus" role="status"></p>
+        </section>
+      </section>
+
+      <section class="table-panel hidden" id="tablePanel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Score sheet</p>
+            <h2 class="brand-heading"><span>Chipmates</span> Rounds</h2>
+            <p class="table-meta" id="tableMeta"></p>
+          </div>
+          <div class="table-actions hidden" id="tableActions">
+            <span class="winner-badge hidden" id="winnerBadge"></span>
+            <button class="secondary-action share-action" id="shareGame" type="button">Share link</button>
+            <button class="money-action" id="addMoney" type="button" title="Add money" aria-label="Add money">$</button>
+            <button class="primary-action" id="addPoints" type="button">Add Points</button>
+            <button class="end-action" id="endGame" type="button">End Game</button>
+            <button class="primary-action hidden" id="newGame" type="button">Start New Game</button>
+          </div>
+        </div>
+        <p class="share-status" id="tableStatus" role="status"></p>
+        <div class="standings" id="standings"></div>
+        <div class="history" id="history"></div>
+      </section>
+    </main>
+
+    <div class="modal-overlay hidden" id="pointsDialog" role="dialog" aria-modal="true" aria-labelledby="pointsTitle">
+      <section class="modal-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">New round</p>
+            <h2 id="pointsTitle">Add Points</h2>
+          </div>
+          <button class="icon-button" id="cancelPoints" type="button" title="Close" aria-label="Close">×</button>
+        </div>
+        <div class="points-form" id="pointsForm"></div>
+        <div class="actions-row">
+          <button class="secondary-action" id="cancelPointsFooter" type="button">Cancel</button>
+          <button class="primary-action" id="saveRound" type="button">Save Points</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-overlay hidden" id="moneyDialog" role="dialog" aria-modal="true" aria-labelledby="moneyTitle">
+      <section class="modal-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Table money</p>
+            <h2 id="moneyTitle">Add Money</h2>
+          </div>
+          <button class="icon-button" id="cancelMoney" type="button" title="Close" aria-label="Close">×</button>
+        </div>
+        <div class="money-player-entry">
+          <label for="moneyPlayerName">Add player for this game</label>
+          <div class="entry-controls">
+            <input id="moneyPlayerName" type="text" placeholder="Player name" autocomplete="off" />
+            <button id="addMoneyPlayer" type="button">Add</button>
+          </div>
+        </div>
+        <div class="points-form" id="moneyForm"></div>
+        <div class="actions-row">
+          <button class="secondary-action" id="cancelMoneyFooter" type="button">Cancel</button>
+          <button class="primary-action" id="saveMoney" type="button">Save Money</button>
+        </div>
+      </section>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
