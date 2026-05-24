@@ -292,6 +292,129 @@ button:hover {
   box-shadow: 0 14px 28px rgba(69, 16, 24, 0.3);
 }
 
+.actions-compact .table-actions {
+  background: rgba(0, 0, 0, 0.18);
+  gap: 6px;
+  padding: 5px;
+}
+
+.actions-compact .table-actions .primary-action,
+.actions-compact .table-actions .secondary-action,
+.actions-compact .table-actions .end-action {
+  font-size: 0.72rem;
+  height: 32px;
+  min-height: 32px;
+  min-width: 76px;
+  padding: 0 10px;
+}
+
+.actions-compact .money-action {
+  flex-basis: 32px;
+  font-size: 0.86rem;
+  height: 32px;
+  width: 32px;
+}
+
+.actions-mini .table-actions {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  gap: 5px;
+  padding: 5px;
+}
+
+.actions-mini .table-actions .primary-action,
+.actions-mini .table-actions .secondary-action,
+.actions-mini .table-actions .end-action,
+.actions-mini .money-action {
+  border-radius: 999px;
+  font-size: 0.68rem;
+  height: 30px;
+  min-height: 30px;
+  min-width: 0;
+  padding: 0 9px;
+}
+
+.actions-mini .money-action {
+  flex-basis: 30px;
+  font-size: 0.82rem;
+  padding: 0;
+  width: 30px;
+}
+
+.actions-icons .table-actions {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 92px 92px;
+  justify-content: end;
+  padding: 0;
+}
+
+.actions-icons .table-actions .primary-action,
+.actions-icons .table-actions .secondary-action,
+.actions-icons .table-actions .end-action,
+.actions-icons .money-action {
+  border-radius: 999px;
+  height: 32px;
+  min-height: 32px;
+  min-width: 32px;
+  padding: 0 10px;
+}
+
+.actions-icons .table-actions .share-action,
+.actions-icons .money-action {
+  flex: 0 0 32px;
+  font-size: 0.9rem;
+  padding: 0;
+  width: 32px;
+}
+
+.actions-icons .table-actions .share-action {
+  justify-self: center;
+}
+
+.actions-icons .money-action {
+  justify-self: center;
+}
+
+.actions-icons .table-actions #addPoints,
+.actions-icons .table-actions #endGame {
+  font-size: 0.72rem;
+  min-width: 92px;
+  width: 92px;
+}
+
+.actions-icons .table-actions .end-action {
+  min-width: 92px;
+}
+
+.actions-split .table-actions {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  gap: 7px;
+  padding: 0;
+}
+
+.actions-split .table-actions .primary-action,
+.actions-split .table-actions .secondary-action,
+.actions-split .table-actions .end-action {
+  font-size: 0.72rem;
+  height: 32px;
+  min-height: 32px;
+  min-width: 78px;
+  padding: 0 10px;
+}
+
+.actions-split .money-action {
+  flex-basis: 32px;
+  font-size: 0.86rem;
+  height: 32px;
+  width: 32px;
+}
+
 .table-meta {
   color: rgba(255, 250, 240, 0.72);
   font-size: 0.9rem;
@@ -1122,5 +1245,80 @@ select:focus {
 
   .table-actions #newGame:not(.hidden) {
     grid-column: 1 / -1;
+  }
+
+  .actions-compact .table-actions {
+    grid-template-columns: 1fr 32px;
+  }
+
+  .actions-compact .table-actions #addPoints,
+  .actions-compact .table-actions #endGame {
+    grid-column: auto;
+  }
+
+  .actions-compact .table-actions .primary-action,
+  .actions-compact .table-actions .secondary-action,
+  .actions-compact .table-actions .end-action {
+    min-width: 0;
+  }
+
+  .actions-mini .table-actions {
+    align-items: center;
+    display: grid;
+    grid-template-columns: 1.1fr 30px 1fr 1fr;
+  }
+
+  .actions-mini .table-actions #addPoints,
+  .actions-mini .table-actions #endGame,
+  .actions-mini .table-actions #newGame:not(.hidden) {
+    grid-column: auto;
+  }
+
+  .actions-mini .table-actions .primary-action,
+  .actions-mini .table-actions .secondary-action,
+  .actions-mini .table-actions .end-action {
+    width: 100%;
+  }
+
+  .actions-icons .table-actions {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: 92px 92px;
+    justify-content: end;
+  }
+
+  .actions-icons .table-actions .share-action {
+    justify-self: end;
+  }
+
+  .actions-icons .table-actions #addPoints,
+  .actions-icons .table-actions #endGame {
+    grid-column: span 1;
+  }
+
+  .actions-icons .table-actions #addPoints {
+    grid-column: 1 / 2;
+    min-width: 92px;
+    width: 100%;
+  }
+
+  .actions-icons .table-actions #endGame {
+    grid-column: 2 / 3;
+    min-width: 92px;
+    width: 100%;
+  }
+
+  .actions-split .table-actions {
+    display: grid;
+    grid-template-columns: 1fr 32px 1fr;
+  }
+
+  .actions-split .table-actions #endGame {
+    grid-column: 1 / -1;
+  }
+
+  .actions-split .table-actions #addPoints,
+  .actions-split .table-actions #newGame:not(.hidden) {
+    grid-column: auto;
   }
 }
