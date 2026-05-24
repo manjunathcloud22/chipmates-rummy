@@ -597,11 +597,22 @@ function renderStandings() {
             </tr>
           </thead>
           <tbody>
+            <tr class="total-row">
+              <th scope="row">Total</th>
+              ${state.players
+                .map((player) => {
+                  const total = playerTotals.find((item) => item.id === player.id);
+                  return `<td class="${scoreToneClass(total?.score || 0)}" data-label="${escapeHtml(player.name)}">${total?.score || 0}</td>`;
+                })
+                .join("")}
+            </tr>
             ${
               state.rounds.length
                 ? state.rounds
+                    .map((round, index) => ({ round, index }))
+                    .reverse()
                     .map(
-                      (round, index) => `
+                      ({ round, index }) => `
                         <tr>
                           <th scope="row">
                             <span class="round-label">Round ${index + 1}</span>
@@ -631,17 +642,6 @@ function renderStandings() {
                 `
             }
           </tbody>
-          <tfoot>
-            <tr>
-              <th scope="row">Total</th>
-              ${state.players
-                .map((player) => {
-                  const total = playerTotals.find((item) => item.id === player.id);
-                  return `<td class="${scoreToneClass(total?.score || 0)}" data-label="${escapeHtml(player.name)}">${total?.score || 0}</td>`;
-                })
-                .join("")}
-            </tr>
-          </tfoot>
         </table>
       </div>
     `

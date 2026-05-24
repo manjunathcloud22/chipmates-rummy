@@ -783,8 +783,8 @@ select:focus {
   background: #ffedbf;
 }
 
-.score-sheet tfoot th,
-.score-sheet tfoot td {
+.score-sheet .total-row th,
+.score-sheet .total-row td {
   background: linear-gradient(180deg, #2c2010, #15100a);
   border-bottom: 0;
   color: #fff2cf;
@@ -800,17 +800,17 @@ select:focus {
   color: var(--danger);
 }
 
-.score-sheet tfoot td.score-safe {
+.score-sheet .total-row td.score-safe {
   background: linear-gradient(180deg, #16a05f, #08633c);
   color: #f2fff7;
 }
 
-.score-sheet tfoot td.score-warning {
+.score-sheet .total-row td.score-warning {
   background: linear-gradient(180deg, #f59e0b, #a45105);
   color: #fff8e7;
 }
 
-.score-sheet tfoot td.score-danger {
+.score-sheet .total-row td.score-danger {
   background: linear-gradient(180deg, #dc2626, #7f1010);
   color: #fff1f1;
 }
@@ -1116,15 +1116,15 @@ select:focus {
     color: #26170a;
   }
 
-  .score-sheet tfoot th,
-  .score-sheet tfoot td {
+  .score-sheet .total-row th,
+  .score-sheet .total-row td {
     border-color: rgba(255, 226, 144, 0.22);
     font-size: 0.82rem;
     font-weight: 900;
     padding: 11px 5px;
   }
 
-  .score-sheet tfoot th {
+  .score-sheet .total-row th {
     background: linear-gradient(180deg, #2c2010, #15100a);
     color: #fff2cf;
     text-align: left;
