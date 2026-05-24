@@ -1000,6 +1000,72 @@ select:focus {
     color: #fff2cf;
     text-align: left;
   }
+
+  .money-history {
+    padding: 12px;
+  }
+
+  .money-history-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .clear-history-button {
+    width: 100%;
+  }
+
+  .money-history-table-wrap {
+    overflow-x: hidden;
+  }
+
+  .money-history-table {
+    table-layout: fixed;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .money-history-table th,
+  .money-history-table td {
+    border: 1px solid rgba(255, 226, 144, 0.16);
+    display: table-cell;
+    font-size: 0.74rem;
+    font-weight: 800;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    padding: 10px 5px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: normal;
+    width: auto;
+  }
+
+  .money-history-table th:first-child,
+  .money-history-table td:first-child {
+    left: auto;
+    min-width: 0;
+    position: static;
+    text-align: left;
+    width: 26%;
+  }
+
+  .money-history-table thead th {
+    font-size: 0.66rem;
+    letter-spacing: 0;
+    padding: 9px 4px;
+    text-transform: none;
+  }
+
+  .money-history-table tbody th {
+    background: rgba(255, 250, 240, 0.12);
+    font-size: 0.72rem;
+  }
+
+  .money-history-table tfoot th,
+  .money-history-table tfoot td {
+    font-size: 0.8rem;
+    font-weight: 900;
+    padding: 11px 5px;
+  }
 }
 
 @media (max-width: 480px) {
