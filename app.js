@@ -13,6 +13,10 @@ const initialState = {
 };
 
 const searchParams = new URLSearchParams(window.location.search);
+const actionStyle = searchParams.get("actions") || "icons";
+if (["compact", "mini", "icons", "split"].includes(actionStyle)) {
+  document.body.classList.add(`actions-${actionStyle}`);
+}
 let gameId = searchParams.get("g") || searchParams.get("gameId");
 let state = loadState();
 let editingRoundIndex = null;
@@ -588,7 +592,7 @@ function renderStandings() {
         <table class="score-sheet">
           <thead>
             <tr>
-              <th scope="col">Round</th>
+              <th scope="col">Rounds</th>
               ${state.players.map((player) => `<th scope="col">${escapeHtml(player.name)}</th>`).join("")}
             </tr>
           </thead>
@@ -823,6 +827,23 @@ function render() {
   if (isLoadingRoom) {
     els.tableStatus.textContent = "Loading shared game...";
   }
+  renderActionLabels();
+}
+
+function renderActionLabels() {
+  if (document.body.classList.contains("actions-icons")) {
+    els.shareGame.textContent = "↗";
+    els.shareGame.setAttribute("title", "Share link");
+    els.addPoints.textContent = "Points";
+    els.addPoints.setAttribute("title", "Add Points");
+    els.endGame.textContent = "End Game";
+    els.endGame.setAttribute("title", "End Game");
+    return;
+  }
+
+  els.shareGame.textContent = "Share link";
+  els.addPoints.textContent = "Add Points";
+  els.endGame.textContent = "End Game";
 }
 
 function escapeHtml(value) {
