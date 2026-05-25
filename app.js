@@ -483,6 +483,32 @@ function addMoneyPlayer() {
   inputs[inputs.length - 1]?.focus();
 }
 
+function removeMoneyPlayer(id) {
+  if (state.ended) {
+    return;
+  }
+
+  const player = state.players.find((item) => item.id === id);
+  if (!player) {
+    return;
+  }
+
+  const shouldRemove = window.confirm(`Remove ${player.name} from this game?`);
+  if (!shouldRemove) {
+    return;
+  }
+
+  state.players = state.players.filter((item) => item.id !== id);
+  state.rounds.forEach((round) => {
+    delete round[id];
+  });
+  els.moneyDialogStatus.textContent = "";
+  saveState();
+  renderMoneyForm();
+  renderStandings();
+  renderHistory();
+}
+
 function openEditRoundDialog(roundIndex) {
   if (!state.started || state.ended || !state.rounds[roundIndex]) {
     return;
@@ -753,9 +779,10 @@ function renderMoneyForm() {
   els.moneyForm.innerHTML = state.players
     .map(
       (player) => `
-        <div class="round-input-row">
+        <div class="round-input-row money-input-row">
           <label for="money-${player.id}">${escapeHtml(player.name)}</label>
           <input id="money-${player.id}" type="text" data-money-input="${player.id}" value="0" placeholder="0 or -50" autocomplete="off" />
+          <button class="remove-money-player" type="button" data-remove-money-player="${escapeHtml(player.id)}" title="Remove ${escapeHtml(player.name)}" aria-label="Remove ${escapeHtml(player.name)}">×</button>
         </div>
       `,
     )
@@ -1161,6 +1188,12 @@ els.history.addEventListener("click", (event) => {
 });
 els.saveMoney.addEventListener("click", saveMoney);
 els.addMoneyPlayer.addEventListener("click", addMoneyPlayer);
+els.moneyForm.addEventListener("click", (event) => {
+  const removeMoneyPlayerButton = event.target.closest("[data-remove-money-player]");
+  if (removeMoneyPlayerButton) {
+    removeMoneyPlayer(removeMoneyPlayerButton.dataset.removeMoneyPlayer);
+  }
+});
 els.moneyPlayerName.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     addMoneyPlayer();

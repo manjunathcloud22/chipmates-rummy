@@ -664,6 +664,63 @@ select:focus {
   text-align: right;
 }
 
+.compact-money-player-entry {
+  margin-top: 12px;
+  padding: 10px;
+}
+
+.compact-money-player-entry label {
+  display: none;
+}
+
+.compact-money-player-entry .entry-controls {
+  gap: 8px;
+}
+
+.compact-money-player-entry input {
+  min-height: 38px;
+}
+
+.compact-money-player-entry button {
+  border-radius: 999px;
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 950;
+  min-height: 38px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.money-input-row {
+  gap: 8px;
+}
+
+.money-input-row input {
+  flex-basis: 94px;
+}
+
+.remove-money-player {
+  align-items: center;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 999px;
+  color: var(--danger);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 30px;
+  font-size: 0.82rem;
+  font-weight: 950;
+  height: 30px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  width: 30px;
+}
+
+.remove-money-player:hover {
+  background: rgba(220, 38, 38, 0.14);
+}
+
 .share-status {
   color: var(--accent-dark);
   font-size: 0.88rem;
@@ -1388,8 +1445,40 @@ select:focus {
     flex-direction: column;
   }
 
+  .modal-panel > .actions-row {
+    align-items: stretch;
+    flex-direction: row;
+  }
+
+  .modal-panel > .actions-row .secondary-action,
+  .modal-panel > .actions-row .primary-action {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    width: auto;
+  }
+
+  .compact-money-player-entry .entry-controls {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .compact-money-player-entry button {
+    padding: 0 10px;
+  }
+
   .round-input-row input {
     flex-basis: 96px;
+  }
+
+  .money-input-row {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .money-input-row input {
+    flex-basis: 82px;
   }
 
   .section-heading {
