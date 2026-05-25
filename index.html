@@ -55,6 +55,7 @@
             <button class="secondary-action share-action" id="shareGame" type="button">Share link</button>
             <button class="money-action" id="addMoney" type="button" title="Add money" aria-label="Add money">$</button>
             <button class="primary-action" id="addPoints" type="button">Add Points</button>
+            <button class="primary-action add-player-action" id="addGamePlayer" type="button">+ Player</button>
             <button class="end-action" id="endGame" type="button">End Game</button>
             <button class="primary-action hidden" id="newGame" type="button">Start New Game</button>
           </div>
@@ -102,6 +103,48 @@
         <div class="actions-row">
           <button class="secondary-action" id="cancelMoneyFooter" type="button">Cancel</button>
           <button class="primary-action" id="saveMoney" type="button">Save Money</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-overlay hidden" id="playerDialog" role="dialog" aria-modal="true" aria-labelledby="playerTitle">
+      <section class="modal-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Table player</p>
+            <h2 id="playerTitle">Add Player</h2>
+          </div>
+          <button class="icon-button" id="cancelGamePlayer" type="button" title="Close" aria-label="Close">×</button>
+        </div>
+        <div class="money-player-entry" id="gamePlayerNameRow">
+          <label for="gamePlayerName">Player name</label>
+          <div class="entry-controls">
+            <input id="gamePlayerName" type="text" placeholder="Add player name" autocomplete="off" />
+          </div>
+        </div>
+        <div class="join-score-options" id="joinScoreOptions">
+          <span class="label">Starting points</span>
+          <label>
+            <input type="radio" name="joinScoreRule" value="maxPlusOne" checked />
+            <span>Highest + 1</span>
+          </label>
+          <label>
+            <input type="radio" name="joinScoreRule" value="max" />
+            <span>Highest</span>
+          </label>
+          <label>
+            <input type="radio" name="joinScoreRule" value="custom" />
+            <span>Custom</span>
+          </label>
+        </div>
+        <div class="field-row hidden" id="customJoinScoreRow">
+          <label for="customJoinScore">Custom starting points</label>
+          <input id="customJoinScore" type="number" inputmode="numeric" min="0" step="1" value="0" />
+        </div>
+        <p class="share-status" id="playerDialogStatus" role="status"></p>
+        <div class="actions-row">
+          <button class="secondary-action" id="cancelGamePlayerFooter" type="button">Cancel</button>
+          <button class="primary-action" id="saveGamePlayer" type="button">Add Player</button>
         </div>
       </section>
     </div>

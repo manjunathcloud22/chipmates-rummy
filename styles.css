@@ -380,6 +380,7 @@ button:hover {
 }
 
 .actions-icons .table-actions #addPoints,
+.actions-icons .table-actions #addGamePlayer,
 .actions-icons .table-actions #endGame {
   font-size: 0.72rem;
   min-width: 92px;
@@ -815,6 +816,48 @@ select:focus {
   color: #fff1f1;
 }
 
+.eliminated-cell {
+  text-align: center;
+}
+
+.score-value {
+  display: block;
+  font-weight: 950;
+}
+
+.eliminated-label {
+  color: rgba(255, 242, 207, 0.86);
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+.reenter-button {
+  background: linear-gradient(180deg, #ffe28f, #d89020);
+  border: 1px solid rgba(255, 244, 196, 0.72);
+  border-radius: 999px;
+  box-shadow: 0 7px 14px rgba(61, 26, 0, 0.24);
+  color: #351b03;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.68rem;
+  font-weight: 950;
+  justify-content: center;
+  line-height: 1;
+  margin-top: 7px;
+  min-height: 26px;
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+
+.reenter-button:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
 .money-history {
   background:
     radial-gradient(circle at 10% 8%, rgba(255, 226, 144, 0.18), transparent 26%),
@@ -1006,6 +1049,55 @@ select:focus {
   padding: 14px;
 }
 
+.join-score-options {
+  background: rgba(255, 250, 240, 0.58);
+  border: 1px solid rgba(201, 169, 98, 0.58);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 12px;
+  padding: 14px;
+}
+
+.join-score-options .label {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.join-score-options label {
+  margin: 0;
+}
+
+.join-score-options input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.join-score-options span:not(.label) {
+  align-items: center;
+  background: #fff8e8;
+  border: 1px solid rgba(201, 169, 98, 0.78);
+  border-radius: 999px;
+  color: var(--ink);
+  display: flex;
+  font-size: 0.74rem;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 8px;
+  text-align: center;
+}
+
+.join-score-options input:checked + span {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent),
+    linear-gradient(180deg, #ffd76a, #b87916);
+  border-color: rgba(98, 53, 8, 0.34);
+  color: #2b1605;
+}
+
 .modal-panel .actions-row .secondary-action {
   width: auto;
 }
@@ -1121,13 +1213,26 @@ select:focus {
     border-color: rgba(255, 226, 144, 0.22);
     font-size: 0.82rem;
     font-weight: 900;
-    padding: 11px 5px;
+    padding: 10px 4px;
   }
 
   .score-sheet .total-row th {
     background: linear-gradient(180deg, #2c2010, #15100a);
     color: #fff2cf;
     text-align: left;
+  }
+
+  .eliminated-label {
+    font-size: 0.52rem;
+    letter-spacing: 0;
+  }
+
+  .reenter-button {
+    font-size: 0.58rem;
+    margin-top: 5px;
+    min-height: 23px;
+    padding: 5px 7px;
+    width: 100%;
   }
 
   .money-history {
@@ -1292,6 +1397,7 @@ select:focus {
   }
 
   .actions-icons .table-actions #addPoints,
+  .actions-icons .table-actions #addGamePlayer,
   .actions-icons .table-actions #endGame {
     grid-column: span 1;
   }
@@ -1302,8 +1408,14 @@ select:focus {
     width: 100%;
   }
 
-  .actions-icons .table-actions #endGame {
+  .actions-icons .table-actions #addGamePlayer {
     grid-column: 2 / 3;
+    min-width: 92px;
+    width: 100%;
+  }
+
+  .actions-icons .table-actions #endGame {
+    grid-column: 1 / -1;
     min-width: 92px;
     width: 100%;
   }

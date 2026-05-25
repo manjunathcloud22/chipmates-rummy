@@ -21,6 +21,7 @@ let gameId = searchParams.get("g") || searchParams.get("gameId");
 let state = loadState();
 let editingRoundIndex = null;
 let moneyHistoryVisible = false;
+let reenteringPlayerId = null;
 let isLoadingRoom = Boolean(gameId);
 let roomLoadFailed = false;
 let isCloudSaving = false;
@@ -42,6 +43,7 @@ const els = {
   tableStatus: document.querySelector("#tableStatus"),
   tableActions: document.querySelector("#tableActions"),
   addPoints: document.querySelector("#addPoints"),
+  addGamePlayer: document.querySelector("#addGamePlayer"),
   addMoney: document.querySelector("#addMoney"),
   endGame: document.querySelector("#endGame"),
   newGame: document.querySelector("#newGame"),
@@ -59,6 +61,17 @@ const els = {
   cancelMoney: document.querySelector("#cancelMoney"),
   cancelMoneyFooter: document.querySelector("#cancelMoneyFooter"),
   saveMoney: document.querySelector("#saveMoney"),
+  playerDialog: document.querySelector("#playerDialog"),
+  playerTitle: document.querySelector("#playerTitle"),
+  gamePlayerNameRow: document.querySelector("#gamePlayerNameRow"),
+  gamePlayerName: document.querySelector("#gamePlayerName"),
+  joinScoreOptions: document.querySelector("#joinScoreOptions"),
+  customJoinScoreRow: document.querySelector("#customJoinScoreRow"),
+  customJoinScore: document.querySelector("#customJoinScore"),
+  playerDialogStatus: document.querySelector("#playerDialogStatus"),
+  cancelGamePlayer: document.querySelector("#cancelGamePlayer"),
+  cancelGamePlayerFooter: document.querySelector("#cancelGamePlayerFooter"),
+  saveGamePlayer: document.querySelector("#saveGamePlayer"),
   shareGame: document.querySelector("#shareGame"),
   standings: document.querySelector("#standings"),
   history: document.querySelector("#history"),
@@ -233,6 +246,155 @@ function openMoneyDialog() {
   firstInput?.select();
 }
 
+function openGamePlayerDialog() {
+  if (!state.started || state.ended) {
+    return;
+  }
+
+  reenteringPlayerId = null;
+  els.playerTitle.textContent = "Add Player";
+  els.gamePlayerNameRow.classList.remove("hidden");
+  els.saveGamePlayer.textContent = "Add Player";
+  els.gamePlayerName.value = "";
+  const defaultRule = state.rounds.length ? "maxPlusOne" : "custom";
+  setJoinScoreRule(defaultRule);
+  updateJoinScorePreview();
+  els.playerDialog.classList.remove("hidden");
+  els.gamePlayerName.focus();
+}
+
+function openReenterDialog(playerId) {
+  if (state.ended) {
+    return;
+  }
+
+  const player = totals().find((item) => item.id === playerId);
+  if (!player || !player.out) {
+    return;
+  }
+
+  reenteringPlayerId = playerId;
+  els.playerTitle.textContent = `Re-enter ${player.name}`;
+  els.gamePlayerName.value = player.name;
+  els.gamePlayerNameRow.classList.add("hidden");
+  els.saveGamePlayer.textContent = "Re-enter";
+  setJoinScoreRule("maxPlusOne");
+  updateJoinScorePreview();
+  els.playerDialog.classList.remove("hidden");
+  if (selectedJoinScoreRule() === "custom") {
+    els.customJoinScore.focus();
+    els.customJoinScore.select();
+  }
+}
+
+function closeGamePlayerDialog() {
+  els.playerDialog.classList.add("hidden");
+  reenteringPlayerId = null;
+  els.gamePlayerNameRow.classList.remove("hidden");
+}
+
+function saveGamePlayer() {
+  if (!state.started || state.ended) {
+    return;
+  }
+
+  if (reenteringPlayerId) {
+    savePlayerReentry();
+    return;
+  }
+
+  const name = els.gamePlayerName.value.trim();
+  if (!name) {
+    els.gamePlayerName.focus();
+    return;
+  }
+
+  const duplicate = state.players.some((player) => player.name.toLowerCase() === name.toLowerCase());
+  if (duplicate) {
+    els.gamePlayerName.select();
+    els.playerDialogStatus.textContent = "Player already exists.";
+    return;
+  }
+
+  const player = { id: crypto.randomUUID(), name };
+  const startingScore = readJoinStartingScore();
+  state.players.push(player);
+  if (state.rounds.length) {
+    state.rounds[state.rounds.length - 1][player.id] = startingScore;
+  }
+
+  closeGamePlayerDialog();
+  saveState();
+  render();
+}
+
+function savePlayerReentry() {
+  const player = totals().find((item) => item.id === reenteringPlayerId);
+  if (!player || !state.rounds.length) {
+    return;
+  }
+
+  const targetScore = readJoinStartingScore();
+  const adjustment = targetScore - player.score;
+  const latestRound = state.rounds[state.rounds.length - 1];
+  latestRound[player.id] = (Number(latestRound[player.id]) || 0) + adjustment;
+
+  closeGamePlayerDialog();
+  saveState();
+  render();
+}
+
+function currentMaxScore(excludedPlayerId = null) {
+  const allTotals = totals().filter((player) => player.id !== excludedPlayerId);
+  const activeTotals = allTotals.filter((player) => !player.out);
+  const source = activeTotals.length ? activeTotals : allTotals;
+  return Math.max(0, ...source.map((player) => player.score));
+}
+
+function selectedJoinScoreRule() {
+  return document.querySelector('input[name="joinScoreRule"]:checked')?.value || "maxPlusOne";
+}
+
+function setJoinScoreRule(rule) {
+  const input = document.querySelector(`input[name="joinScoreRule"][value="${rule}"]`);
+  if (input) {
+    input.checked = true;
+  }
+  els.joinScoreOptions.classList.toggle("hidden", !state.rounds.length);
+  els.customJoinScoreRow.classList.toggle("hidden", selectedJoinScoreRule() !== "custom");
+  els.customJoinScore.value = String(state.rounds.length ? currentMaxScore(reenteringPlayerId) + 1 : 0);
+}
+
+function readJoinStartingScore() {
+  if (!state.rounds.length) {
+    return 0;
+  }
+
+  const maxScore = currentMaxScore(reenteringPlayerId);
+  const rule = selectedJoinScoreRule();
+  if (rule === "max") {
+    return maxScore;
+  }
+  if (rule === "custom") {
+    return Math.max(0, Number(els.customJoinScore.value) || 0);
+  }
+  return maxScore + 1;
+}
+
+function updateJoinScorePreview() {
+  const isCustom = selectedJoinScoreRule() === "custom";
+  els.customJoinScoreRow.classList.toggle("hidden", !isCustom);
+  const startingScore = readJoinStartingScore();
+  if (reenteringPlayerId) {
+    els.playerDialogStatus.textContent = `Player will re-enter at ${startingScore} points.`;
+    return;
+  }
+
+  els.playerDialogStatus.textContent = state.rounds.length
+    ? `New player will start at ${startingScore} points.`
+    : "New player will start at 0 points.";
+}
+
 function closeMoneyDialog() {
   els.moneyDialog.classList.add("hidden");
 }
@@ -326,6 +488,7 @@ function endGame() {
 
   closePointsDialog();
   closeMoneyDialog();
+  closeGamePlayerDialog();
   state.ended = true;
   saveState();
   render();
@@ -602,7 +765,7 @@ function renderStandings() {
               ${state.players
                 .map((player) => {
                   const total = playerTotals.find((item) => item.id === player.id);
-                  return `<td class="${scoreToneClass(total?.score || 0)}" data-label="${escapeHtml(player.name)}">${total?.score || 0}</td>`;
+                  return renderTotalCell(player, total);
                 })
                 .join("")}
             </tr>
@@ -625,7 +788,7 @@ function renderStandings() {
                           ${state.players
                             .map(
                               (player) =>
-                                `<td data-label="${escapeHtml(player.name)}">${Number(round[player.id]) || 0}</td>`,
+                                renderRoundCell(player, round),
                             )
                             .join("")}
                         </tr>
@@ -646,6 +809,37 @@ function renderStandings() {
       </div>
     `
     : `<p class="empty-state">Add players to begin tracking scores.</p>`;
+}
+
+function renderRoundCell(player, round) {
+  const score = Number(round[player.id]) || 0;
+  const playerName = escapeHtml(player.name);
+  if (score < 0) {
+    return `<td class="limit-reached" data-label="${playerName}">${state.pointLimit}</td>`;
+  }
+
+  const scoreClass = score >= state.pointLimit ? "limit-reached" : "";
+  return `<td class="${scoreClass}" data-label="${playerName}">${score}</td>`;
+}
+
+function renderTotalCell(player, total) {
+  const score = total?.score || 0;
+  const playerName = escapeHtml(player.name);
+  if (!total?.out) {
+    return `<td class="${scoreToneClass(score)}" data-label="${playerName}">${score}</td>`;
+  }
+
+  return `
+    <td class="${scoreToneClass(score)} eliminated-cell" data-label="${playerName}">
+      <span class="score-value">${score}</span>
+      <span class="eliminated-label">Eliminated</span>
+      ${
+        state.ended
+          ? ""
+          : `<button class="reenter-button" type="button" data-reenter-player="${escapeHtml(player.id)}">Re-enter</button>`
+      }
+    </td>
+  `;
 }
 
 function scoreToneClass(score) {
@@ -807,7 +1001,11 @@ function readSignedAmount(value) {
 }
 
 function isDialogOpen() {
-  return !els.pointsDialog.classList.contains("hidden") || !els.moneyDialog.classList.contains("hidden");
+  return (
+    !els.pointsDialog.classList.contains("hidden") ||
+    !els.moneyDialog.classList.contains("hidden") ||
+    !els.playerDialog.classList.contains("hidden")
+  );
 }
 
 function render() {
@@ -818,6 +1016,7 @@ function render() {
   els.tableActions.classList.toggle("hidden", !state.started || isLoadingRoom);
   els.startGame.classList.toggle("hidden", state.started);
   els.addPoints.classList.toggle("hidden", state.ended);
+  els.addGamePlayer.classList.toggle("hidden", state.ended);
   els.addMoney.classList.toggle("hidden", state.ended);
   els.endGame.classList.toggle("hidden", state.ended);
   els.newGame.classList.toggle("hidden", !state.ended);
@@ -836,6 +1035,8 @@ function renderActionLabels() {
     els.shareGame.setAttribute("title", "Share link");
     els.addPoints.textContent = "Points";
     els.addPoints.setAttribute("title", "Add Points");
+    els.addGamePlayer.textContent = "+ Player";
+    els.addGamePlayer.setAttribute("title", "Add Player");
     els.endGame.textContent = "End Game";
     els.endGame.setAttribute("title", "End Game");
     return;
@@ -843,6 +1044,7 @@ function renderActionLabels() {
 
   els.shareGame.textContent = "Share link";
   els.addPoints.textContent = "Add Points";
+  els.addGamePlayer.textContent = "+ Player";
   els.endGame.textContent = "End Game";
 }
 
@@ -869,10 +1071,17 @@ els.playerChips.addEventListener("click", (event) => {
 });
 els.startGame.addEventListener("click", startGame);
 els.addPoints.addEventListener("click", openPointsDialog);
+els.addGamePlayer.addEventListener("click", openGamePlayerDialog);
 els.addMoney.addEventListener("click", openMoneyDialog);
 els.endGame.addEventListener("click", endGame);
 els.newGame.addEventListener("click", startNewGame);
 els.standings.addEventListener("click", (event) => {
+  const reenterButton = event.target.closest("[data-reenter-player]");
+  if (reenterButton) {
+    openReenterDialog(reenterButton.dataset.reenterPlayer);
+    return;
+  }
+
   const button = event.target.closest("[data-edit-round]");
   if (button) {
     openEditRoundDialog(Number(button.dataset.editRound));
@@ -909,6 +1118,21 @@ els.cancelMoneyFooter.addEventListener("click", closeMoneyDialog);
 els.moneyDialog.addEventListener("click", (event) => {
   if (event.target === els.moneyDialog) {
     closeMoneyDialog();
+  }
+});
+els.saveGamePlayer.addEventListener("click", saveGamePlayer);
+els.cancelGamePlayer.addEventListener("click", closeGamePlayerDialog);
+els.cancelGamePlayerFooter.addEventListener("click", closeGamePlayerDialog);
+els.gamePlayerName.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    saveGamePlayer();
+  }
+});
+els.joinScoreOptions.addEventListener("change", updateJoinScorePreview);
+els.customJoinScore.addEventListener("input", updateJoinScorePreview);
+els.playerDialog.addEventListener("click", (event) => {
+  if (event.target === els.playerDialog) {
+    closeGamePlayerDialog();
   }
 });
 els.shareGame.addEventListener("click", shareGame);
