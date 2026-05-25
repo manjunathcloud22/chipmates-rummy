@@ -673,6 +673,13 @@ select:focus {
   overflow-wrap: anywhere;
 }
 
+.money-error {
+  color: var(--danger);
+  flex-shrink: 0;
+  font-weight: 900;
+  margin-top: 10px;
+}
+
 .standings {
   margin-top: 24px;
 }
@@ -719,6 +726,7 @@ select:focus {
   color: #fff2cf;
   font-size: 0.88rem;
   letter-spacing: 0;
+  position: relative;
   text-transform: uppercase;
 }
 
@@ -727,6 +735,34 @@ select:focus {
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent),
     linear-gradient(180deg, #073522, #031b11);
   color: #fff2cf;
+}
+
+.player-header-name {
+  display: block;
+  padding-right: 18px;
+}
+
+.remove-table-player {
+  align-items: center;
+  background: rgba(255, 119, 119, 0.14);
+  border: 1px solid rgba(255, 196, 196, 0.42);
+  border-radius: 999px;
+  color: #ffe2e2;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 950;
+  height: 18px;
+  justify-content: center;
+  line-height: 1;
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 18px;
+}
+
+.remove-table-player:hover {
+  background: rgba(255, 119, 119, 0.28);
 }
 
 .score-sheet tbody th,
@@ -1031,6 +1067,9 @@ select:focus {
   border: 1px solid rgba(255, 242, 207, 0.72);
   border-radius: 8px;
   box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  max-height: min(760px, calc(100dvh - 36px));
   max-width: 480px;
   padding: 28px;
   position: relative;
@@ -1039,6 +1078,15 @@ select:focus {
 
 .points-form {
   margin-top: 22px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.modal-panel > .actions-row {
+  background: linear-gradient(180deg, rgba(239, 215, 172, 0), rgba(239, 215, 172, 0.99) 24%);
+  flex-shrink: 0;
+  margin-top: 14px;
+  padding-top: 12px;
 }
 
 .money-player-entry {
@@ -1180,6 +1228,18 @@ select:focus {
     text-transform: none;
   }
 
+  .player-header-name {
+    padding-right: 14px;
+  }
+
+  .remove-table-player {
+    font-size: 0.62rem;
+    height: 16px;
+    right: 3px;
+    top: 3px;
+    width: 16px;
+  }
+
   .score-sheet tbody th {
     align-items: center;
     background: #fff0c9;
@@ -1306,6 +1366,20 @@ select:focus {
   .scoreboard-panel,
   .table-panel {
     padding: 16px;
+  }
+
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 10px;
+  }
+
+  .modal-panel {
+    max-height: calc(100dvh - 20px);
+    padding: 18px;
+  }
+
+  .points-form {
+    margin-top: 14px;
   }
 
   .actions-row,

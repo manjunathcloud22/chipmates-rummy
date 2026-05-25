@@ -58,6 +58,7 @@ const els = {
   moneyTitle: document.querySelector("#moneyTitle"),
   moneyPlayerName: document.querySelector("#moneyPlayerName"),
   addMoneyPlayer: document.querySelector("#addMoneyPlayer"),
+  moneyDialogStatus: document.querySelector("#moneyDialogStatus"),
   cancelMoney: document.querySelector("#cancelMoney"),
   cancelMoneyFooter: document.querySelector("#cancelMoneyFooter"),
   saveMoney: document.querySelector("#saveMoney"),
@@ -179,6 +180,29 @@ function removePlayer(id) {
   render();
 }
 
+function removeGamePlayer(id) {
+  if (state.ended) {
+    return;
+  }
+
+  const player = state.players.find((item) => item.id === id);
+  if (!player) {
+    return;
+  }
+
+  const shouldRemove = window.confirm(`Remove ${player.name} from the points table?`);
+  if (!shouldRemove) {
+    return;
+  }
+
+  state.players = state.players.filter((item) => item.id !== id);
+  state.rounds.forEach((round) => {
+    delete round[id];
+  });
+  saveState();
+  render();
+}
+
 function startGame() {
   if (state.players.length < 2) {
     els.playerName.focus();
@@ -240,6 +264,7 @@ function openMoneyDialog() {
 
   renderMoneyForm();
   els.moneyPlayerName.value = "";
+  els.moneyDialogStatus.textContent = "";
   els.moneyDialog.classList.remove("hidden");
   const firstInput = els.moneyForm.querySelector("input");
   firstInput?.focus();
@@ -397,6 +422,7 @@ function updateJoinScorePreview() {
 
 function closeMoneyDialog() {
   els.moneyDialog.classList.add("hidden");
+  els.moneyDialogStatus.textContent = "";
 }
 
 function saveMoney() {
@@ -412,6 +438,12 @@ function saveMoney() {
 
   const hasMoney = Object.values(entry).some((value) => value !== 0);
   if (!hasMoney) {
+    return;
+  }
+
+  const moneyTotal = Object.values(entry).reduce((sum, value) => sum + value, 0);
+  if (moneyTotal !== 0) {
+    els.moneyDialogStatus.textContent = '+ and - are not adding up.';
     return;
   }
 
@@ -445,6 +477,7 @@ function addMoneyPlayer() {
   }
 
   els.moneyPlayerName.value = "";
+  els.moneyDialogStatus.textContent = "";
   renderMoneyForm();
   const inputs = els.moneyForm.querySelectorAll("input");
   inputs[inputs.length - 1]?.focus();
@@ -756,7 +789,7 @@ function renderStandings() {
           <thead>
             <tr>
               <th scope="col">Rounds</th>
-              ${state.players.map((player) => `<th scope="col">${escapeHtml(player.name)}</th>`).join("")}
+              ${state.players.map((player) => renderPlayerHeader(player)).join("")}
             </tr>
           </thead>
           <tbody>
@@ -809,6 +842,20 @@ function renderStandings() {
       </div>
     `
     : `<p class="empty-state">Add players to begin tracking scores.</p>`;
+}
+
+function renderPlayerHeader(player) {
+  const playerName = escapeHtml(player.name);
+  return `
+    <th scope="col">
+      <span class="player-header-name">${playerName}</span>
+      ${
+        state.ended
+          ? ""
+          : `<button class="remove-table-player" type="button" data-remove-game-player="${escapeHtml(player.id)}" title="Remove ${playerName}" aria-label="Remove ${playerName}">×</button>`
+      }
+    </th>
+  `;
 }
 
 function renderRoundCell(player, round) {
@@ -1076,6 +1123,12 @@ els.addMoney.addEventListener("click", openMoneyDialog);
 els.endGame.addEventListener("click", endGame);
 els.newGame.addEventListener("click", startNewGame);
 els.standings.addEventListener("click", (event) => {
+  const removeGamePlayerButton = event.target.closest("[data-remove-game-player]");
+  if (removeGamePlayerButton) {
+    removeGamePlayer(removeGamePlayerButton.dataset.removeGamePlayer);
+    return;
+  }
+
   const reenterButton = event.target.closest("[data-reenter-player]");
   if (reenterButton) {
     openReenterDialog(reenterButton.dataset.reenterPlayer);
