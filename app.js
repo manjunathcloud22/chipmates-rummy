@@ -1,4 +1,6 @@
-const STORAGE_KEY = "rummy-scorekeeper-state";
+const STORAGE_KEY = "chipmates-score-tracker-state";
+const ACTIVE_GAME_EXPIRY_MS = 24 * 60 * 60 * 1000;
+const ENDED_GAME_EXPIRY_MS = 6 * 60 * 60 * 1000;
 const SUPABASE_URL = "https://enurxbewxprrzwilvsgf.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVudXJ4YmV3eHBycnp3aWx2c2dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1ODMzOTAsImV4cCI6MjA5NTE1OTM5MH0.8btKD7z106kPIMNMM6rCYt4-hTRkAAAdeVqNGT77yPw";
@@ -10,6 +12,7 @@ const initialState = {
   moneyEntries: [],
   started: false,
   ended: false,
+  updatedAt: null,
 };
 
 const searchParams = new URLSearchParams(window.location.search);
@@ -26,6 +29,7 @@ let isLoadingRoom = Boolean(gameId);
 let roomLoadFailed = false;
 let isCloudSaving = false;
 let lastLocalChangeAt = 0;
+let lastRefreshedAt = new Date();
 let roomPollTimer = null;
 
 const els = {
@@ -45,6 +49,7 @@ const els = {
   addPoints: document.querySelector("#addPoints"),
   addGamePlayer: document.querySelector("#addGamePlayer"),
   addMoney: document.querySelector("#addMoney"),
+  restartGame: document.querySelector("#restartGame"),
   endGame: document.querySelector("#endGame"),
   newGame: document.querySelector("#newGame"),
   pointsDialog: document.querySelector("#pointsDialog"),
@@ -74,6 +79,8 @@ const els = {
   cancelGamePlayerFooter: document.querySelector("#cancelGamePlayerFooter"),
   saveGamePlayer: document.querySelector("#saveGamePlayer"),
   shareGame: document.querySelector("#shareGame"),
+  refreshScores: document.querySelector("#refreshScores"),
+  refreshMeta: document.querySelector("#refreshMeta"),
   standings: document.querySelector("#standings"),
   history: document.querySelector("#history"),
   winnerBadge: document.querySelector("#winnerBadge"),
@@ -86,6 +93,9 @@ function loadState() {
 
   const sharedState = readSharedState();
   if (sharedState) {
+    if (isStateExpired(sharedState)) {
+      return { ...initialState };
+    }
     return sharedState;
   }
 
@@ -95,7 +105,12 @@ function loadState() {
   }
 
   try {
-    return normalizeState(JSON.parse(saved));
+    const savedState = normalizeState(JSON.parse(saved));
+    if (isStateExpired(savedState)) {
+      localStorage.removeItem(STORAGE_KEY);
+      return { ...initialState };
+    }
+    return savedState;
   } catch {
     return { ...initialState };
   }
@@ -131,10 +146,26 @@ function normalizeState(value) {
     moneyEntries: Array.isArray(value.moneyEntries) ? value.moneyEntries : [],
     started: Boolean(value.started),
     ended: Boolean(value.ended),
+    updatedAt: value.updatedAt || null,
   };
 }
 
+function isStateExpired(value) {
+  if (!value?.started || !value.updatedAt) {
+    return false;
+  }
+
+  const updatedAt = new Date(value.updatedAt).getTime();
+  if (!Number.isFinite(updatedAt)) {
+    return false;
+  }
+
+  const expiryMs = value.ended ? ENDED_GAME_EXPIRY_MS : ACTIVE_GAME_EXPIRY_MS;
+  return Date.now() - updatedAt > expiryMs;
+}
+
 function saveState() {
+  state.updatedAt = new Date().toISOString();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   lastLocalChangeAt = Date.now();
   syncRoom();
@@ -223,10 +254,12 @@ function saveRound() {
     return;
   }
 
-  const round = {};
-  state.players.forEach((player) => {
+  const round = editingRoundIndex === null ? {} : { ...state.rounds[editingRoundIndex] };
+  playersForPointsForm(round).forEach((player) => {
     const input = document.querySelector(`[data-points-input="${player.id}"]`);
-    round[player.id] = Number(input.value) || 0;
+    if (input) {
+      round[player.id] = Number(input.value) || 0;
+    }
   });
 
   const hasScore = Object.values(round).some((value) => value !== 0);
@@ -251,6 +284,9 @@ function openPointsDialog() {
 
   editingRoundIndex = null;
   renderPointsForm();
+  if (!els.pointsForm.querySelector("input")) {
+    return;
+  }
   els.pointsDialog.classList.remove("hidden");
   const firstInput = els.pointsForm.querySelector("input");
   firstInput?.focus();
@@ -567,6 +603,33 @@ function startNewGame() {
   render();
 }
 
+function restartGameWithSamePlayers() {
+  const confirmed = window.confirm("Restart with the same players and clear scores?");
+  if (!confirmed) {
+    return;
+  }
+
+  const currentPlayers = state.players.map((player) => ({ ...player }));
+  const todaysGameHistory = state.moneyEntries;
+  const pointLimit = state.pointLimit;
+  detachFromSharedRoom();
+  closePointsDialog();
+  closeMoneyDialog();
+  closeGamePlayerDialog();
+  state = {
+    ...initialState,
+    pointLimit,
+    players: currentPlayers,
+    rounds: [],
+    moneyEntries: todaysGameHistory,
+    started: true,
+    ended: false,
+  };
+  moneyHistoryVisible = false;
+  saveState();
+  render();
+}
+
 function detachFromSharedRoom() {
   gameId = null;
   isLoadingRoom = false;
@@ -587,7 +650,7 @@ async function shareGame() {
 
   try {
     if (navigator.share) {
-      await navigator.share({ title: "Rummy scores", text: "Current Rummy scorecard", url });
+      await navigator.share({ title: "Score Tracker", text: "Current scorecard", url });
       els.tableStatus.textContent = "Share sheet opened.";
       return;
     }
@@ -668,11 +731,11 @@ async function saveCloudGame() {
   }
 }
 
-async function loadRoomState({ silent = false } = {}) {
+async function loadRoomState({ silent = false, force = false } = {}) {
   if (!gameId) {
     return;
   }
-  if (isCloudSaving || Date.now() - lastLocalChangeAt < 1500) {
+  if (!force && (isCloudSaving || Date.now() - lastLocalChangeAt < 1500)) {
     return;
   }
 
@@ -692,8 +755,25 @@ async function loadRoomState({ silent = false } = {}) {
     }
 
     const nextState = normalizeState(data[0].state_json);
+    if (isStateExpired(nextState)) {
+      state = { ...initialState };
+      gameId = null;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      window.history.replaceState({}, "", window.location.pathname);
+      isLoadingRoom = false;
+      roomLoadFailed = false;
+      if (roomPollTimer) {
+        clearInterval(roomPollTimer);
+        roomPollTimer = null;
+      }
+      els.setupStatus.textContent = "Previous game expired. Start a new game.";
+      render();
+      return;
+    }
+
     const changed = JSON.stringify(nextState) !== JSON.stringify(state);
     state = nextState;
+    lastRefreshedAt = new Date();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     window.history.replaceState({}, "", `${window.location.pathname}?g=${gameId}`);
     isLoadingRoom = false;
@@ -703,6 +783,8 @@ async function loadRoomState({ silent = false } = {}) {
     }
     if (changed || !silent) {
       render();
+    } else {
+      renderRefreshMeta();
     }
   } catch {
     roomLoadFailed = true;
@@ -713,6 +795,30 @@ async function loadRoomState({ silent = false } = {}) {
     isLoadingRoom = false;
     render();
   }
+}
+
+async function refreshScoreSheet() {
+  if (gameId) {
+    els.tableStatus.textContent = "Refreshing scores...";
+    await loadRoomState({ force: true });
+    if (!roomLoadFailed) {
+      els.tableStatus.textContent = "Scores refreshed.";
+    }
+    return;
+  }
+
+  const sharedState = readSharedState();
+  if (sharedState && !isStateExpired(sharedState)) {
+    state = sharedState;
+    lastRefreshedAt = new Date();
+    render();
+    els.tableStatus.textContent = "Scores refreshed.";
+    return;
+  }
+
+  lastRefreshedAt = new Date();
+  render();
+  els.tableStatus.textContent = "Scores are up to date.";
 }
 
 function startRoomPolling() {
@@ -759,7 +865,9 @@ function renderPlayers() {
 function renderPointsForm(round = null) {
   els.pointsTitle.textContent = editingRoundIndex === null ? "Add Points" : `Edit Round ${editingRoundIndex + 1}`;
   els.saveRound.textContent = editingRoundIndex === null ? "Save Points" : "Update Points";
-  els.pointsForm.innerHTML = state.players
+  const players = playersForPointsForm(round);
+  els.pointsForm.innerHTML = players.length
+    ? players
     .map(
       (player) => {
         const value = round ? Number(round[player.id]) || 0 : 25;
@@ -771,7 +879,21 @@ function renderPointsForm(round = null) {
       `;
       },
     )
-    .join("");
+    .join("")
+    : `<p class="empty-state">All players are eliminated. Re-enter a player before adding points.</p>`;
+}
+
+function playersForPointsForm(round = null) {
+  if (round) {
+    return state.players.filter((player) => {
+      const total = totals().find((item) => item.id === player.id);
+      const roundScore = Number(round[player.id]) || 0;
+      return !total?.out || roundScore !== 0;
+    });
+  }
+
+  const playerTotals = totals();
+  return state.players.filter((player) => !playerTotals.find((item) => item.id === player.id)?.out);
 }
 
 function renderMoneyForm() {
@@ -917,10 +1039,12 @@ function renderTotalCell(player, total) {
 }
 
 function scoreToneClass(score) {
-  if (score > 200) {
+  const pointLimit = Math.max(1, Number(state.pointLimit) || 251);
+  const scorePercent = score / pointLimit;
+  if (scorePercent >= 0.8) {
     return "score-danger";
   }
-  if (score >= 150) {
+  if (scorePercent > 0.6) {
     return "score-warning";
   }
   return "score-safe";
@@ -1082,6 +1206,20 @@ function isDialogOpen() {
   );
 }
 
+function renderRefreshMeta() {
+  if (!els.refreshMeta) {
+    return;
+  }
+
+  const formatted = new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(lastRefreshedAt);
+  els.refreshMeta.textContent = `Last refreshed: ${formatted}`;
+}
+
 function render() {
   const showGame = state.started || isLoadingRoom || roomLoadFailed;
   els.appShell.classList.toggle("game-active", showGame);
@@ -1092,6 +1230,7 @@ function render() {
   els.addPoints.classList.toggle("hidden", state.ended);
   els.addGamePlayer.classList.toggle("hidden", state.ended);
   els.addMoney.classList.toggle("hidden", state.ended);
+  els.restartGame.classList.toggle("hidden", state.ended);
   els.endGame.classList.toggle("hidden", state.ended);
   els.newGame.classList.toggle("hidden", !state.ended);
   renderPlayers();
@@ -1100,6 +1239,7 @@ function render() {
   if (isLoadingRoom) {
     els.tableStatus.textContent = "Loading shared game...";
   }
+  renderRefreshMeta();
   renderActionLabels();
 }
 
@@ -1107,18 +1247,24 @@ function renderActionLabels() {
   if (document.body.classList.contains("actions-icons")) {
     els.shareGame.textContent = "↗";
     els.shareGame.setAttribute("title", "Share link");
-    els.addPoints.textContent = "Points";
+    els.refreshScores.textContent = "Refresh";
+    els.refreshScores.setAttribute("title", "Refresh Scores");
+    els.addPoints.textContent = "+ Points";
     els.addPoints.setAttribute("title", "Add Points");
     els.addGamePlayer.textContent = "+ Player";
     els.addGamePlayer.setAttribute("title", "Add Player");
+    els.restartGame.textContent = "Restart";
+    els.restartGame.setAttribute("title", "Restart Game");
     els.endGame.textContent = "End Game";
     els.endGame.setAttribute("title", "End Game");
     return;
   }
 
   els.shareGame.textContent = "Share link";
-  els.addPoints.textContent = "Add Points";
+  els.refreshScores.textContent = "Refresh";
+  els.addPoints.textContent = "+ Points";
   els.addGamePlayer.textContent = "+ Player";
+  els.restartGame.textContent = "Restart Game";
   els.endGame.textContent = "End Game";
 }
 
@@ -1147,6 +1293,8 @@ els.startGame.addEventListener("click", startGame);
 els.addPoints.addEventListener("click", openPointsDialog);
 els.addGamePlayer.addEventListener("click", openGamePlayerDialog);
 els.addMoney.addEventListener("click", openMoneyDialog);
+els.refreshScores.addEventListener("click", refreshScoreSheet);
+els.restartGame.addEventListener("click", restartGameWithSamePlayers);
 els.endGame.addEventListener("click", endGame);
 els.newGame.addEventListener("click", startNewGame);
 els.standings.addEventListener("click", (event) => {

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chipmates Rummy</title>
+    <title>Chipmates Score Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,8 +18,8 @@
         <div class="topbar">
           <div class="brand-mark" aria-hidden="true">CM</div>
           <div class="brand-copy">
-            <p class="eyebrow">Rummy table</p>
-            <h1><span>Chipmates</span> Rummy</h1>
+            <p class="eyebrow">Score Tracker</p>
+            <h1><span>Chipmates</span> Score Tracker</h1>
           </div>
         </div>
 
@@ -56,11 +56,16 @@
             <button class="money-action" id="addMoney" type="button" title="Add money" aria-label="Add money">$</button>
             <button class="primary-action" id="addPoints" type="button">Add Points</button>
             <button class="primary-action add-player-action" id="addGamePlayer" type="button">+ Player</button>
+            <button class="restart-action" id="restartGame" type="button">Restart Game</button>
             <button class="end-action" id="endGame" type="button">End Game</button>
             <button class="primary-action hidden" id="newGame" type="button">Start New Game</button>
           </div>
         </div>
         <p class="share-status" id="tableStatus" role="status"></p>
+        <div class="score-table-toolbar">
+          <span id="refreshMeta">Last refreshed: --</span>
+          <button class="refresh-action" id="refreshScores" type="button">Refresh</button>
+        </div>
         <div class="standings" id="standings"></div>
         <div class="history" id="history"></div>
       </section>

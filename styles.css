@@ -206,6 +206,7 @@ button:hover {
 
 .table-actions .primary-action,
 .table-actions .secondary-action,
+.table-actions .restart-action,
 .table-actions .end-action {
   align-items: center;
   border-radius: 999px;
@@ -244,6 +245,29 @@ button:hover {
     inset 0 1px 0 rgba(255, 255, 255, 0.24),
     0 10px 20px rgba(215, 173, 71, 0.22);
   color: #2b1605;
+}
+
+.refresh-action {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.15), transparent),
+    linear-gradient(135deg, #0b3b28, #031b11);
+  border: 1px solid rgba(255, 226, 144, 0.32);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 10px 20px rgba(3, 27, 17, 0.22);
+  color: #fff2cf;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 900;
+  min-height: 32px;
+  padding: 0 13px;
+}
+
+.refresh-action:hover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent),
+    linear-gradient(135deg, #0f5438, #052619);
 }
 
 .money-action {
@@ -285,6 +309,24 @@ button:hover {
     0 10px 20px rgba(69, 16, 24, 0.24);
 }
 
+.restart-action {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent),
+    linear-gradient(135deg, #22a563, #096238);
+  border: 1px solid rgba(183, 255, 213, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 10px 20px rgba(9, 98, 56, 0.24);
+  color: #f2fff7;
+}
+
+.restart-action:hover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent),
+    linear-gradient(135deg, #2fbd73, #0a7442);
+  box-shadow: 0 14px 28px rgba(9, 98, 56, 0.3);
+}
+
 .end-action:hover {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent),
@@ -300,6 +342,7 @@ button:hover {
 
 .actions-compact .table-actions .primary-action,
 .actions-compact .table-actions .secondary-action,
+.actions-compact .table-actions .restart-action,
 .actions-compact .table-actions .end-action {
   font-size: 0.72rem;
   height: 32px;
@@ -324,6 +367,7 @@ button:hover {
 
 .actions-mini .table-actions .primary-action,
 .actions-mini .table-actions .secondary-action,
+.actions-mini .table-actions .restart-action,
 .actions-mini .table-actions .end-action,
 .actions-mini .money-action {
   border-radius: 999px;
@@ -354,6 +398,7 @@ button:hover {
 
 .actions-icons .table-actions .primary-action,
 .actions-icons .table-actions .secondary-action,
+.actions-icons .table-actions .restart-action,
 .actions-icons .table-actions .end-action,
 .actions-icons .money-action {
   border-radius: 999px;
@@ -373,20 +418,49 @@ button:hover {
 
 .actions-icons .table-actions .share-action {
   justify-self: center;
+  grid-row: 1;
 }
 
 .actions-icons .money-action {
   justify-self: center;
+  grid-column: 2 / 3;
+  grid-row: 1;
+}
+
+.actions-icons .table-actions .share-action {
+  grid-column: 1 / 2;
 }
 
 .actions-icons .table-actions #addPoints,
 .actions-icons .table-actions #addGamePlayer,
+.actions-icons .table-actions #restartGame,
 .actions-icons .table-actions #endGame {
   font-size: 0.72rem;
   min-width: 92px;
   width: 92px;
 }
 
+.actions-icons .table-actions #addPoints {
+  grid-column: 1 / 2;
+  grid-row: 2;
+}
+
+.actions-icons .table-actions #addGamePlayer {
+  grid-column: 2 / 3;
+  grid-row: 2;
+}
+
+.actions-icons .table-actions #restartGame {
+  grid-column: 1 / 2;
+  grid-row: 3;
+}
+
+.actions-icons .table-actions #endGame {
+  grid-column: 2 / 3;
+  grid-row: 3;
+}
+
+.actions-icons .table-actions .restart-action,
 .actions-icons .table-actions .end-action {
   min-width: 92px;
 }
@@ -401,6 +475,7 @@ button:hover {
 
 .actions-split .table-actions .primary-action,
 .actions-split .table-actions .secondary-action,
+.actions-split .table-actions .restart-action,
 .actions-split .table-actions .end-action {
   font-size: 0.72rem;
   height: 32px;
@@ -738,7 +813,24 @@ select:focus {
 }
 
 .standings {
-  margin-top: 24px;
+  margin-top: 10px;
+}
+
+.score-table-toolbar {
+  align-items: center;
+  color: var(--gold);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.score-table-toolbar span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .score-sheet-wrap {
@@ -1497,6 +1589,7 @@ select:focus {
 
   .table-actions .share-action,
   .table-actions .primary-action,
+  .table-actions .restart-action,
   .table-actions .end-action {
     min-width: 0;
     width: 100%;
@@ -1507,6 +1600,7 @@ select:focus {
   }
 
   .table-actions #addPoints,
+  .table-actions #restartGame,
   .table-actions #endGame {
     grid-column: 1 / -1;
   }
@@ -1520,12 +1614,14 @@ select:focus {
   }
 
   .actions-compact .table-actions #addPoints,
+  .actions-compact .table-actions #restartGame,
   .actions-compact .table-actions #endGame {
     grid-column: auto;
   }
 
   .actions-compact .table-actions .primary-action,
   .actions-compact .table-actions .secondary-action,
+  .actions-compact .table-actions .restart-action,
   .actions-compact .table-actions .end-action {
     min-width: 0;
   }
@@ -1537,6 +1633,7 @@ select:focus {
   }
 
   .actions-mini .table-actions #addPoints,
+  .actions-mini .table-actions #restartGame,
   .actions-mini .table-actions #endGame,
   .actions-mini .table-actions #newGame:not(.hidden) {
     grid-column: auto;
@@ -1544,6 +1641,7 @@ select:focus {
 
   .actions-mini .table-actions .primary-action,
   .actions-mini .table-actions .secondary-action,
+  .actions-mini .table-actions .restart-action,
   .actions-mini .table-actions .end-action {
     width: 100%;
   }
@@ -1556,32 +1654,43 @@ select:focus {
   }
 
   .actions-icons .table-actions .share-action {
-    justify-self: end;
+    justify-self: center;
   }
 
   .actions-icons .table-actions #addPoints,
   .actions-icons .table-actions #addGamePlayer,
+  .actions-icons .table-actions #restartGame,
   .actions-icons .table-actions #endGame {
     grid-column: span 1;
   }
 
-  .actions-icons .table-actions #addPoints {
-    grid-column: 1 / 2;
-    min-width: 92px;
-    width: 100%;
-  }
+.actions-icons .table-actions #addPoints {
+  grid-column: 1 / 2;
+  grid-row: 2;
+  min-width: 92px;
+  width: 100%;
+}
 
   .actions-icons .table-actions #addGamePlayer {
     grid-column: 2 / 3;
+    grid-row: 2;
     min-width: 92px;
     width: 100%;
   }
 
-  .actions-icons .table-actions #endGame {
-    grid-column: 1 / -1;
+  .actions-icons .table-actions #restartGame {
+    grid-column: 1 / 2;
+    grid-row: 3;
     min-width: 92px;
     width: 100%;
   }
+
+.actions-icons .table-actions #endGame {
+  grid-column: 2 / 3;
+  grid-row: 3;
+  min-width: 92px;
+  width: 100%;
+}
 
   .actions-split .table-actions {
     display: grid;
@@ -1593,6 +1702,7 @@ select:focus {
   }
 
   .actions-split .table-actions #addPoints,
+  .actions-split .table-actions #restartGame,
   .actions-split .table-actions #newGame:not(.hidden) {
     grid-column: auto;
   }

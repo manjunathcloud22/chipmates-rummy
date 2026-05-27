@@ -91,5 +91,5 @@ function sendJson(res, status, value) {
 }
 
 server.listen(port, "0.0.0.0", () => {
-  console.log(`Rummy Scorekeeper running at http://localhost:${port}`);
+  console.log(`Score Tracker running at http://localhost:${port}`);
 });
